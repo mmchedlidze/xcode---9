@@ -5,13 +5,6 @@
 //  Created by Mariam Mchedlidze on 05.11.23.
 //
 
-//
-//  ViewController.swift
-//  datasaving
-//
-//  Created by Mariam Mchedlidze on 05.11.23.
-//
-
 import UIKit
 
 final class ViewController: UIViewController, UITextFieldDelegate {
@@ -43,6 +36,8 @@ final class ViewController: UIViewController, UITextFieldDelegate {
         UIsetup()
         UIconstraint()
     }
+    
+    // MARK - UI Setup
     
     private func UIsetup() {
         userSetup()
@@ -117,12 +112,46 @@ final class ViewController: UIViewController, UITextFieldDelegate {
         ])
     }
     
-    func textFieldDidBeginEditing(_ textField: UITextField) {
+    internal func textFieldDidBeginEditing(_ textField: UITextField) {
         textField.text = ""
     }
-    @objc private func signInButtonTapped() {
-           let noteListVC = NoteListViewController() // 
-           navigationController?.pushViewController(noteListVC, animated: true)
-       }
+    
+    // MARK - Keychain
+    let keychain = KeychainManager()
+    
+    @IBAction func signInButtonTapped(_ sender: Any) {
+        let username = userTextField.text ?? ""
+        let password = passwordTextField.text ?? ""
+        keychain.saveCredentials(username: username, password: password)
+
+        if keychain.validateCredentials(username: username, password: password) {
+            let noteListVC = NoteListViewController()
+            navigationController?.pushViewController(noteListVC, animated: true)
+            checkFirstSignIn()
+
+        } else {
+            let alert = UIAlertController(title: "Error", message: "Incorrect credentials", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            present(alert, animated: true, completion: nil)
+        }
+    }
+    // MARK - Userdefaults
+    
+    private func isFirstSignIn() -> Bool {
+        return UserDefaults.standard.bool(forKey: "hasSignedIn") == true
+    }
+    
+    private func checkFirstSignIn() {
+        if isFirstSignIn() {
+            showWelcomeAlert()
+            UserDefaults.standard.set(true, forKey: "hasSignedIn")
+        } else {print("Not a new user")}
+    }
+    
+    private func showWelcomeAlert() {
+        let alert = UIAlertController(title: "Welcome", message: "Enjoy your journey with us!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
     
 }

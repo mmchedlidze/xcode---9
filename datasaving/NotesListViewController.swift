@@ -1,11 +1,15 @@
+//
+//  ViewController.swift
+//  datasaving
+//
+//  Created by Mariam Mchedlidze on 05.11.23.
+//
+
 import UIKit
 
-class NoteListViewController: UIViewController, AddNoteDelegate, UITableViewDelegate, UITableViewDataSource, NoteDetailsDelegate {
-    func didUpdateNote(_ updatedNote: String) {
-        updatedNote
-    }
-    
+class NoteListViewController: UIViewController {
     var notes: [String] = ["note1", "note2"]
+    
     let tableView: UITableView = {
         let table = UITableView()
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -19,14 +23,16 @@ class NoteListViewController: UIViewController, AddNoteDelegate, UITableViewDele
         setupNavigationBar()
     }
     
-    func tableviewSetup() {
+    // MARK - Tableview Setup
+    
+    private func tableviewSetup() {
         view.addSubview(tableView)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "noteCell")
     }
     
-    func tableviewConstraints() {
+    private func tableviewConstraints() {
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -35,7 +41,17 @@ class NoteListViewController: UIViewController, AddNoteDelegate, UITableViewDele
         ])
     }
     
-    func setupNavigationBar() {
+    // MARK - Functions
+    internal func didUpdateNote(_ updatedNote: String) {
+        let noteDetailsVC = NoteDetailsViewController()
+        
+        if let selectedNote = noteDetailsVC.selectedNote, let index = notes.firstIndex(of: selectedNote), selectedNote != updatedNote {
+            notes[index] = updatedNote
+            tableView.reloadData()
+        }
+    }
+    
+    private func setupNavigationBar() {
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNoteTapped))
         navigationItem.rightBarButtonItem = addButton
     }
@@ -45,7 +61,25 @@ class NoteListViewController: UIViewController, AddNoteDelegate, UITableViewDele
         addNoteVC.delegate = self
         navigationController?.pushViewController(addNoteVC, animated: true)
     }
-    
+}
+
+// MARK - Extensions
+extension NoteListViewController: AddNoteDelegate {
+    func didAddNote(_ note: String) {
+        notes.append(note)
+        tableView.reloadData()
+    }
+}
+extension NoteListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let selectedNote = notes[indexPath.row]
+        let noteDetailsVC = NoteDetailsViewController()
+        noteDetailsVC.selectedNote = selectedNote
+        noteDetailsVC.delegate = self
+        navigationController?.pushViewController(noteDetailsVC, animated: true)
+    }
+}
+extension NoteListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return notes.count
     }
@@ -55,17 +89,6 @@ class NoteListViewController: UIViewController, AddNoteDelegate, UITableViewDele
         cell.textLabel?.text = notes[indexPath.row]
         return cell
     }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            let selectedNote = notes[indexPath.row]
-            let noteDetailsVC = NoteDetailsViewController()
-            noteDetailsVC.selectedNote = selectedNote
-            noteDetailsVC.delegate = self 
-            navigationController?.pushViewController(noteDetailsVC, animated: true)
-        }
-    
-    func didAddNote(_ note: String) {
-        notes.append(note)
-        tableView.reloadData()
-    }
+}
+extension NoteListViewController: NoteDetailsDelegate {
 }
